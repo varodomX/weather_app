@@ -1,0 +1,12 @@
+{
+  "lang_en": "ภาษาอังกฤษ",
+  "lang_th": "ภาษาไทย",
+  "title_signin": "เข้าสู่ระบบ กับ Zlip",
+  "username": "ชื่อผู้ใช้",
+  "password": "รหัสผ่าน",
+  "enter_username":"ใส่ชื่อผู้ใช้ของคุณ...",
+  "enter_password":"ใส่รหัสผ่านของคุณ...",
+  "forgot_password": "ลืมรหัสผ่านหรือไม่?",
+  "continue": "เข้าสู่ระบบเลย",
+  "need_account": "ต้องการบัญชี?"
+}
