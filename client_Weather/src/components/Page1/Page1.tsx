@@ -34,6 +34,7 @@ interface InformationProp {
     description_lineheight: string;
     wind_direction: string;
     wind_speed: string;
+    time: string;
     date: string;
     weather: "w1" | "w2" | "w3" | "w4" | "w5" | "w6";
 }
@@ -50,6 +51,7 @@ const Page1 = () => {
                     wind_direction: "ลมตะวันออกเฉียงใต้",
                     wind_speed: "ความเร็วลม\n10 - 20 กม./ชม",
                     weather: "w1",
+                    time: "07.00 น.",
                     date: Date()
                 }}
                 onSubmit={(values, { setSubmitting }) => {
@@ -82,21 +84,40 @@ const Page1 = () => {
                                     <VStack alignItems="start" spacing={3}>
                                         <Heading fontSize="calc(0.75em + 1.2vmin)">แก้ไขข้อมูล</Heading>
                                         <Field as={Input} type="datetime-local" name="date" border="1px" borderColor="#ffffff1a" />
+                                        <Select
+                                            name="time"
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            border="1px"
+                                            borderColor="#ffffff1a"
+                                        >
+                                            <option value="07:00" label="0700" >
+                                               0700
+                                            </option>
+                                            <option value="10:00 น.">
+                                                1000
+                                            </option>
+                                            <option value="13:00 น.">
+                                                1300
+                                            </option>
+                                            <option value="16:00 น.">
+                                                1600
+                                            </option>
+                                            <option value="19:00 น.">
+                                                1900
+                                            </option>
+                                            <option value="22:00 น.">
+                                                2200
+                                            </option>
+                                            <option value="01:00 น.">
+                                                0100
+                                            </option>
+                                            <option value="04:00 น.">
+                                                0400
+                                            </option>
+                                        </Select>
                                         <Field as={Textarea} name="description" border="1px" borderColor="#ffffff1a" />
-                                        <SimpleGrid columns={[1, 2, 2, 2]} spacing={2}>
-                                            <FormControl>
-                                                <FormLabel fontSize="12px">Fontsize (ขนาดฟอนต์)</FormLabel>
-                                                <Field as={Input} type="number" name="description_fontsize" border="1px" borderColor="#ffffff1a" />
-                                            </FormControl>
-                                            <FormControl>
-                                                <FormLabel fontSize="12px">Lineheight (ระยะห่างระหว่างบรรทัด)</FormLabel>
-                                                <Field as={Input} type="number" name="description_lineheight" border="1px" borderColor="#ffffff1a" />
-                                            </FormControl>
-                                            <FormControl>
-                                                <FormLabel fontSize="12px">Height Position (ตำแหน่งความสูง)</FormLabel>
-                                                <Field as={Input} type="number" name="description_position" border="1px" borderColor="#ffffff1a" />
-                                            </FormControl>
-                                        </SimpleGrid>
+                                        
                                         <Select
                                             name="weather"
                                             onChange={handleChange}
@@ -217,11 +238,26 @@ const NewSlip = (props: InformationProp) => {
             ctx.shadowColor = "#00000066";
             ctx.shadowBlur = 8;
             ctx.fillStyle = "#00000000";
-            ctx.fillText(dayjs(props.date).format("วันที่ DD MMMM YYYY เวลา HH:mm น."), WIDTH / 2 - 305, 174);
+            ctx.fillText(dayjs(props.date).format("วันที่ DD MMMM YYYY"), WIDTH / 2 - 255, 174);
             ctx.fillStyle = "#fa9744";
             ctx.strokeStyle = "#9a4c11";
-            ctx.strokeText(dayjs(props.date).format("วันที่ DD MMMM YYYY เวลา HH:mm น."), WIDTH / 2 - 305, 174);
-            ctx.fillText(dayjs(props.date).format("วันที่ DD MMMM YYYY เวลา HH:mm น."), WIDTH / 2 - 305, 174);
+            ctx.strokeText(dayjs(props.date).format("วันที่ DD MMMM YYYY"), WIDTH / 2 - 255, 174);
+            ctx.fillText(dayjs(props.date).format("วันที่ DD MMMM YYYY"), WIDTH / 2 - 255, 174);
+
+
+            ///time
+            ctx.textAlign = "center";
+            ctx.lineWidth = 6;
+            ctx.shadowColor = "#00000066";
+            ctx.shadowBlur = 8;
+            ctx.fillStyle = "#00000000";
+            ctx.fillText(props.time, WIDTH - 320, 170, 140,);
+            ctx.fillStyle = "#fa9744";
+            ctx.strokeStyle = "#9a4c11";
+
+            ctx.strokeText(props.time, WIDTH - 320, 170, 140,);
+            ctx.fillText(props.time, WIDTH - 320, 170, 140,);
+
 
             ctx.shadowBlur = 0;
 

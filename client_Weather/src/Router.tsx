@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Switch, Route, useLocation, Router, useRouter } from "wouter";
+import { Switch, Route, useLocation, Router, useRouter, Link } from "wouter";
 import { useQuery } from "react-query";
 import AuthLayout from "./layouts/AuthLayout";
 import AppLayout from "./layouts/Layout";
@@ -8,6 +8,7 @@ import Landing from "./views/app/Landing";
 import NotFoundPage from "./components/NotFoundPage";
 import Page1 from "./components/Page1";
 import Page2 from "./components/Page2";
+import Page3 from "./components/Page3";
 import Line from "./components/Line";
 
 function useAuth() {
@@ -48,7 +49,8 @@ function useAuth() {
         location == "/app" ||
         location == "/app/page1" ||
         location == "/app/page2" ||
-        location == "/app/line" 
+        location == "/app/page3" ||
+        location == "https://radarkhonkaen.com/line/" 
       ) {
         return setLocation("/account/sign-in");
       }
@@ -95,11 +97,16 @@ function RouterMain() {
               <Page2 />
             </AppLayout>
           </Route>
-          <Route path="/app/line">
+          <Route path="/app/page3">
+            <AppLayout>
+              <Page3 />
+            </AppLayout>
+          </Route>
+          <Link to="https://radarkhonkaen.com/line/" target="_blank">
             <AppLayout>
               <Line />
             </AppLayout>
-          </Route>
+          </Link>
           <Route>
             <NotFoundPage />
           </Route></Switch>
