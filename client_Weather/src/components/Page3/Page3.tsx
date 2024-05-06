@@ -23,10 +23,12 @@ import timezone from 'dayjs/plugin/timezone';
 import dayjs from "dayjs";
 import th from "dayjs/locale/th";
 import html2canvas from "html2canvas";
+import axios from 'axios'
 
-
-const HEIGHT = 1500;
+const HEIGHT = 1600;
 const WIDTH = 2200;
+
+
 
 interface InformationProp {
     description: string;
@@ -295,12 +297,14 @@ const NewSlip = (props: InformationProp) => {
             ctx.shadowColor = "#00000066";
             ctx.shadowBlur = 8;
             ctx.fillStyle = "#00000000";
-            ctx.fillText(dayjs(props.date).format("วันที่ DD MMMM YYYY"), WIDTH / 2 - 800, 374);
+            ctx.fillText(dayjs(props.date).format("วันที่ DD MMMM 2567"), WIDTH / 2 - 800, 400);
             ctx.fillStyle = "#fff";
             ctx.strokeStyle = "#fff";
-            ctx.strokeText(dayjs(props.date).format("วันที่ DD MMMM YYYY"), WIDTH / 2 - 800, 374);
-            ctx.fillText(dayjs(props.date).format("วันที่ DD MMMM YYYY"), WIDTH / 2 - 800, 374);
+            ctx.strokeText(dayjs(props.date).format("วันที่ DD MMMM 2567"), WIDTH / 2 - 800, 400);
+            ctx.fillText(dayjs(props.date).format("วันที่ DD MMMM 2567"), WIDTH / 2 - 800, 400);
 
+
+            
             ctx.shadowBlur = 0;
 
             ctx.textAlign = "center";
@@ -308,40 +312,40 @@ const NewSlip = (props: InformationProp) => {
             ctx.fillStyle = "black";
             ctx.font = "bold 5em Kanit";
             ctx.fillStyle = "#000";
-            printAt(ctx, props.wind_direction, WIDTH - 420, 654, 40, 9000);
+            printAt(ctx, props.wind_direction, WIDTH - 420, 690, 40, 9000);
             ///rain
             ctx.font = "bold 5em Kanit";
             ctx.fillStyle = "#FFF";
-            printAt(ctx, props.rain, WIDTH - 1250, 654, 40, 9000);
+            printAt(ctx, props.rain, WIDTH - 1250, 694, 40, 9000);
             ///temp
             ctx.font = "bold 6em Kanit";
             ctx.fillStyle = "#000";
-            printAt(ctx, props.temp, WIDTH - 1720, 670, 40, 9000);
+            printAt(ctx, props.temp, WIDTH - 1720, 700, 40, 9000);
 
             ///press
             ctx.font = "bold 4.5em Kanit";
             ctx.fillStyle = "#fff";
-            printAt(ctx, props.press, WIDTH - 590, 880, 40, 9000);
+            printAt(ctx, props.press, WIDTH - 590, 950, 40, 9000);
             
             ///humidity
             ctx.font = "bold 5.5em Kanit";
             ctx.fillStyle = "#fff";
-            printAt(ctx, props.humidity, WIDTH - 1620, 1290, 40, 9000);
+            printAt(ctx, props.humidity, WIDTH - 1620, 1360, 40, 9000);
 
             ///max
             ctx.font = "bold 5.5em Kanit";
             ctx.fillStyle = "#fff";
-            printAt(ctx, props.max, WIDTH - 1000, 1000, 40, 9000);
+            printAt(ctx, props.max, WIDTH - 1000, 1050, 40, 9000);
 
             ///min
             ctx.font = "bold 5.5em Kanit";
             ctx.fillStyle = "#fff";
-            printAt(ctx, props.min, WIDTH - 1620, 1000, 40, 9000);
+            printAt(ctx, props.min, WIDTH - 1620, 1050, 40, 9000);
 
             ///visibility
             ctx.font = "bold 6em Kanit";
             ctx.fillStyle = "#000";
-            printAt(ctx, props.visibility, WIDTH - 1100, 1280, 40, 9000);
+            printAt(ctx, props.visibility, WIDTH - 1100, 1380, 40, 9000);
 
           
             ctx.font = "bold 2.6em Kanit";
