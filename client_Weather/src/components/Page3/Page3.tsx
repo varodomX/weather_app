@@ -1,4 +1,5 @@
 import Font from "@/components/Font";
+
 import {
     Box,
     Input,
@@ -29,7 +30,6 @@ const HEIGHT = 1600;
 const WIDTH = 2200;
 
 
-
 interface InformationProp {
     description: string;
     description_position: number;
@@ -49,26 +49,70 @@ interface InformationProp {
 }
 
 const Page1 = () => {
+    const [initialValues, setInitialValues] = useState<InformationProp>({
+        description: '',
+        description_position: 1485,
+        description_fontsize: "2",
+        description_lineheight: "42",
+        wind_direction: "",
+        wind_speed: "",
+        bg: "bg1",
+        rain: "0.0",
+        temp: "0.0",
+        press: "0.0",
+        max: "0.0",
+        min: "0.0",
+        visibility: "0",
+        humidity: "0.0",
+        date: Date()
+    });
+
+    useEffect(() => {
+        const fetchWeatherData = async () => {
+            try {
+                const [weatherResponse, tempResponse] = await Promise.all([
+                    axios.get('https://leaf-weather.onrender.com/api/weather'),
+                    axios.get('https://leaf-weather.onrender.com/api/temp')
+                ]);
+
+                const stations = weatherResponse.data.Stations.Station;
+                const targetStation = stations.find((station: any) => station.WmoStationNumber === "48381");
+
+                if (targetStation) {
+                    const observation = targetStation.Observation;
+                    const tempData = tempResponse.data[0];
+                    
+                    setInitialValues({
+                        description: `สถานี: ${targetStation.StationNameThai}\nจังหวัด: ${targetStation.Province}`,
+                        description_position: 1485,
+                        description_fontsize: "2",
+                        description_lineheight: "42",
+                        wind_direction: observation.WindDirection || '',
+                        wind_speed: `${observation.WindSpeed} km/h` || '',
+                        bg: "bg1",
+                        rain: observation.Rainfall || '0.0',
+                        temp: observation.AirTemperature || '0.0',
+                        press: observation.MeanSeaLevelPressure || '0.0',
+                        max: tempData.max || 'N/A',
+                        min: tempData.min || 'N/A',
+                        visibility: observation.LandVisibility || '0',
+                        humidity: observation.RelativeHumidity || '0.0',
+                        date: Date()
+                    });
+                }
+            } catch (error) {
+                console.error('Error fetching weather data:', error);
+            }
+        };
+
+        fetchWeatherData();
+    }, []);
     return (
         <>
             <Formik<InformationProp>
-                initialValues={{
-                    description: `มีฝนฟ้าคะนอง ร้อยละ30 ของพื้นที่\nส่วนมากบริเวณจังหวัดหนองคาย บึงกาฬ อุดรธานี สกลนคร นครพนม\nขอนแก่น ชัยภูมิ นครราชสีมา บุรีร์มย์ สรินทร์ ศรีสะเกษ และอุบลราชธานี\nอุณหภูมิต่ำสุด 24 - 26 องศาเซลเซียส\nอุณหภูมิต่ำสุด 34 - 36 องศาเซลเซียส `,
-                    description_position: 1485,
-                    description_fontsize: "2",
-                    description_lineheight: "42",
-                    wind_direction: "ลมตะวันออกเฉียงใต้",
-                    wind_speed: "ความเร็วลม\n10 - 20 กม./ชม",
-                    bg: "bg1",
-                    rain: "0.0",
-                    temp: "0.0",
-                    press: "0.0",
-                    max: "0.0",
-                    min: "0.0",
-                    visibility: "0",
-                    humidity: "0.0",
-                    date: Date()
-                }}
+                enableReinitialize
+                initialValues={initialValues}
+                
                 onSubmit={(values, { setSubmitting }) => {
                     const slip = document.querySelector<HTMLCanvasElement>("#slip");
 
@@ -77,11 +121,11 @@ const Page1 = () => {
 
                         const url = slip.toDataURL();
 
-                        link.download = "page1.jpg";
+                        link.download = "weather.jpg";
                         link.href = url;
                         document.body.appendChild(link);
-                        // link.click();
-                        // document.body.removeChild(link);
+                        link.click();
+                        document.body.removeChild(link);
 
 
                         setSubmitting(false);
@@ -174,7 +218,7 @@ const Page1 = () => {
                                             borderColor="#ffffff1a"
                                         >
                                             <option value="w1" label="เลือกสภาพอากาศ" >
-                                                เลือกสภาพอากาศ
+                                                เลือกทิศลม
                                             </option>
                                             <option value="เหนือ">
                                                 เหนือ
@@ -202,7 +246,7 @@ const Page1 = () => {
                                             </option>
                                         </Select>
 
-                                        {/* <Button
+                                        <Button
                                             isLoading={isSubmitting}
                                             type="submit"
                                             bg="#ffffff1a"
@@ -211,7 +255,7 @@ const Page1 = () => {
                                             color="#fff"
                                         >
                                             Save Image
-                                        </Button> */}
+                                        </Button>
                                         <Box fontSize="12px">วิธีโหลดรูป! คลิกขวา Save Image as</Box>
                                     </VStack>
                                 </Form>
@@ -223,6 +267,7 @@ const Page1 = () => {
         </>
     );
 };
+
 
 const NewSlip = (props: InformationProp) => {
     const ref = useRef<HTMLCanvasElement>(null);
@@ -279,7 +324,7 @@ const NewSlip = (props: InformationProp) => {
     useEffect(() => {
         const canvas = ref.current;
         const ctx = canvas?.getContext("2d");
-
+        
         if (ctx && canvas && assets) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
 
@@ -340,12 +385,12 @@ const NewSlip = (props: InformationProp) => {
             ///min
             ctx.font = "bold 5.5em Kanit";
             ctx.fillStyle = "#fff";
-            printAt(ctx, props.min, WIDTH - 1620, 1050, 40, 9000);
+            printAt(ctx, props.min, WIDTH - 1620, 1100, 40, 9000);
 
             ///visibility
             ctx.font = "bold 6em Kanit";
             ctx.fillStyle = "#000";
-            printAt(ctx, props.visibility, WIDTH - 1100, 1380, 40, 9000);
+            printAt(ctx, props.visibility, WIDTH - 1130, 1380, 40, 9000);
 
           
             ctx.font = "bold 2.6em Kanit";

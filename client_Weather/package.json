@@ -18,7 +18,7 @@
     "@fortawesome/react-fontawesome": "^0.2.0",
     "@popperjs/core": "^2.11.8",
     "aos": "^3.0.0-beta.6",
-    "axios": "^1.6.8",
+    "axios": "^1.7.2",
     "dayjs": "^1.11.4",
     "formik": "^2.2.9",
     "framer-motion": "^7.10.3",
