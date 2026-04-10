@@ -26,6 +26,7 @@ import html2canvas from "html2canvas";
 
 const HEIGHT = 1814;
 const WIDTH = 1134;
+const INITIAL_DATE = dayjs().format("YYYY-MM-DD");
 
 interface InformationProp {
     description: string;
@@ -38,6 +39,20 @@ interface InformationProp {
     date: string;
     weather: "w1" | "w2" | "w3" | "w4" | "w5" | "w6";
 }
+
+const getTimeSlotFromDate = (dateValue: string) => {
+    const hour = dayjs(dateValue).hour();
+
+    if (hour >= 9 && hour < 12) return "10:00 น.";
+    if (hour >= 12 && hour < 15) return "13:00 น.";
+    if (hour >= 15 && hour < 18) return "16:00 น.";
+    if (hour >= 18 && hour < 21) return "19:00 น.";
+    if (hour >= 21 && hour <= 23) return "22:00 น.";
+    if (hour >= 0 && hour < 3) return "01:00 น.";
+    if (hour >= 3 && hour < 6) return "04:00 น.";
+
+    return "07:00 น.";
+};
 
 const printAt = (context: CanvasRenderingContext2D, text: string, x: number, y: number, lineHeight: number, fitWidth: number) => {
     var lines = text.split('\n');
@@ -72,8 +87,8 @@ const Page1 = () => {
                     wind_direction: "ลมตะวันออกเฉียงใต้",
                     wind_speed: "ความเร็วลม\n10 - 20 กม./ชม",
                     weather: "w1",
-                    time: "07.00 น.",
-                    date: Date()
+                    time: getTimeSlotFromDate(INITIAL_DATE),
+                    date: INITIAL_DATE
                 }}
                 onSubmit={(values, { setSubmitting }) => {
                     const slip = document.querySelector<HTMLCanvasElement>("#slip");
@@ -103,15 +118,22 @@ const Page1 = () => {
                                 <Form style={{ width: "100%" }}>
                                     <VStack alignItems="start" spacing={3}>
                                         <Heading fontSize="calc(0.75em + 1.2vmin)">แก้ไขข้อมูล</Heading>
-                                        <Field as={Input} type="datetime-local" name="date" border="1px" borderColor="#ffffff1a" />
+                                        <Field
+                                            as={Input}
+                                            type="date"
+                                            name="date"
+                                            border="1px"
+                                            borderColor="#ffffff1a"
+                                        />
                                         <Select
                                             name="time"
+                                            value={values.time}
                                             onChange={handleChange}
                                             onBlur={handleBlur}
                                             border="1px"
                                             borderColor="#ffffff1a"
                                         >
-                                            <option value="07:00" label="0700" >
+                                            <option value="07:00 น." label="0700" >
                                                0700
                                             </option>
                                             <option value="10:00 น.">
@@ -167,7 +189,41 @@ const Page1 = () => {
                                                 มีเมฆมาก
                                             </option>
                                         </Select>
-                                        <Field as={Input} name="wind_direction" border="1px" borderColor="#ffffff1a" />
+                                        <Select
+                                            name="wind_direction"
+                                            onChange={handleChange}
+                                            onBlur={handleBlur}
+                                            border="1px"
+                                            borderColor="#ffffff1a"
+                                        >
+                                            <option value="w1" label="เลือกทิศลม" >
+                                                เลือกทิศลม
+                                            </option>
+                                            <option value="เหนือ">
+                                                เหนือ
+                                            </option>
+                                            <option value="ตะวันออกเฉียงเหนือ">
+                                                ตะวันออกเฉียงเหนือ
+                                            </option>
+                                            <option value="ตะวันออก">
+                                                ตะวันออก
+                                            </option>
+                                            <option value="ตะวันออกเฉียงใต้">
+                                                ตะวันออกเฉียงใต้
+                                            </option>
+                                            <option value="ใต้">
+                                                ใต้
+                                            </option>
+                                            <option value="ตะวันตกเฉียงใต้">
+                                                ตะวันตกเฉียงใต้
+                                            </option>
+                                            <option value="ตะวันตก">
+                                                ตะวันตก
+                                            </option>
+                                            <option value="ตะวันตกเฉียงเหนือ">
+                                                ตะวันตกเฉียงเหนือ
+                                            </option>
+                                        </Select>
                                         <Field as={Textarea} name="wind_speed" border="1px" borderColor="#ffffff1a" />
 
                                         {/* <Button
@@ -310,7 +366,7 @@ const NewSlip = (props: InformationProp) => {
     
 
     return (
-        <Flex h="100vh" w={['100%', '100%', '70%', '60%', '60%']} alignItems="center" justifyContent={["center", "center", "start", "start"]} direction="column">
+        <Flex pb="8" w={['100%', '100%', '70%', '60%', '60%']} alignItems="center" justifyContent={["center", "center", "start", "start"]} direction="column">
             <Font />
             <canvas
                 id="slip"

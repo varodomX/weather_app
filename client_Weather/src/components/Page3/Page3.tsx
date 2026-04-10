@@ -23,7 +23,6 @@ import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import dayjs from "dayjs";
 import th from "dayjs/locale/th";
-import html2canvas from "html2canvas";
 import axios from 'axios'
 
 
@@ -277,8 +276,7 @@ const Page1 = () => {
 
                                         <Button
                                              isLoading={isSubmitting}
-                                             type="button" // ✅ ป้องกันการรีโหลดหน้าเว็บ
-                                             onClick={handleSaveImage} // ✅ ใช้ฟังก์ชันแยก
+                                             type="submit"
                                              bg="#ffffff1a"
                                              _hover={{ bg: "#fff3", border: "0", borderColor: "#fff3" }}
                                              fontWeight="400"
@@ -352,45 +350,6 @@ const NewSlip = (props: InformationProp) => {
     }, []);
     
     useEffect(() => {
-        const handleSaveImage = async () => {
-            const element = document.getElementById("slip"); // ✅ เลือก Canvas ที่ต้องการบันทึก
-            if (!element) {
-                console.error("❌ ไม่พบองค์ประกอบ #slip");
-                return;
-            }
-        
-            try {
-                const canvas = await html2canvas(element, {
-                    scale: window.devicePixelRatio, // ✅ ป้องกันภาพแตกบน Mobile
-                    useCORS: true, // ✅ รองรับรูปภาพที่โหลดจาก API อื่น
-                    logging: false
-                });
-        
-                // ✅ ใช้ Blob URL สำหรับ Mobile
-                canvas.toBlob((blob) => {
-                    if (!blob) {
-                        console.error("❌ ไม่สามารถสร้าง Blob ได้");
-                        return;
-                    }
-        
-                    const blobURL = URL.createObjectURL(blob);
-                    const link = document.createElement("a");
-                    link.href = blobURL;
-                    link.download = "weather.png";
-                    document.body.appendChild(link);
-        
-                    // ✅ ใช้ click() เพื่อให้ทำงานบนมือถือ
-                    link.click();
-        
-                    // ✅ ลบ URL ที่ไม่ใช้แล้ว
-                    URL.revokeObjectURL(blobURL);
-                    document.body.removeChild(link);
-                }, "image/png");
-        
-            } catch (error) {
-                console.error("❌ Error ในการบันทึกรูป:", error);
-            }
-        };
         const canvas = ref.current;
         const ctx = canvas?.getContext("2d");
         
