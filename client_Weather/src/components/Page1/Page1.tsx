@@ -39,6 +39,27 @@ interface InformationProp {
     weather: "w1" | "w2" | "w3" | "w4" | "w5" | "w6";
 }
 
+const printAt = (context: CanvasRenderingContext2D, text: string, x: number, y: number, lineHeight: number, fitWidth: number) => {
+    var lines = text.split('\n');
+    fitWidth = fitWidth || 0;
+
+    if (fitWidth <= 0) {
+        context.fillText(text, x, y);
+        return;
+    }
+
+    for (var idx = 1; idx <= text.length; idx++) {
+        var str = text.substr(0, idx);
+        if (context.measureText(str).width > fitWidth) {
+            context.fillText(text.substr(0, idx - 1), x, y);
+            printAt(context, text.substr(idx - 1), x, y + lineHeight, lineHeight, fitWidth);
+            return;
+        }
+    }
+    for (var i = 0; i < lines.length; i++)
+        context.fillText(lines[i], x, y + (i * lineHeight));
+};
+
 const Page1 = () => {
     return (
         <>
@@ -67,7 +88,6 @@ const Page1 = () => {
                         document.body.appendChild(link);
                         // link.click();
                         // document.body.removeChild(link);
-
 
                         setSubmitting(false);
                     }
@@ -223,16 +243,16 @@ const NewSlip = (props: InformationProp) => {
     useEffect(() => {
         const canvas = ref.current;
         const ctx = canvas?.getContext("2d");
-
+    
         if (ctx && canvas && assets) {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-
+    
             ctx.fillStyle = "#3e3e3e";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
+    
             ctx.drawImage(assets.bg, 0, 0, canvas.width, canvas.height);
             ctx.font = "bold 2.6em Kanit";
-
+    
             ctx.textAlign = "left";
             ctx.lineWidth = 6;
             ctx.shadowColor = "#00000066";
@@ -243,8 +263,7 @@ const NewSlip = (props: InformationProp) => {
             ctx.strokeStyle = "#9a4c11";
             ctx.strokeText(dayjs(props.date).format("วันที่ DD MMMM YYYY"), WIDTH / 2 - 255, 174);
             ctx.fillText(dayjs(props.date).format("วันที่ DD MMMM YYYY"), WIDTH / 2 - 255, 174);
-
-
+    
             ///time
             ctx.textAlign = "center";
             ctx.lineWidth = 6;
@@ -254,17 +273,15 @@ const NewSlip = (props: InformationProp) => {
             ctx.fillText(props.time, WIDTH - 320, 170, 140,);
             ctx.fillStyle = "#fa9744";
             ctx.strokeStyle = "#9a4c11";
-
             ctx.strokeText(props.time, WIDTH - 320, 170, 140,);
             ctx.fillText(props.time, WIDTH - 320, 170, 140,);
-
-
+    
             ctx.shadowBlur = 0;
-
+    
             ctx.textAlign = "center";
             ctx.font = `${props.description_fontsize}em Kanit`;
             ctx.fillStyle = "black";
-            printAt(ctx, props.description, WIDTH - 580, props.description_position, props.description_lineheight, 9000);
+            printAt(ctx, props.description, WIDTH - 580, props.description_position, parseFloat(props.description_lineheight), 9000);  // ใช้ parseFloat เพื่อแปลง string เป็น number
             ctx.font = "bold 2em Kanit";
             ctx.fillStyle = "#8d4f16";
             printAt(ctx, props.wind_direction, WIDTH - 220, 754, 40, 9000);
@@ -272,29 +289,11 @@ const NewSlip = (props: InformationProp) => {
             ctx.font = "bold 2.7em Kanit";
             printAt(ctx, props.wind_speed, WIDTH - 220, 920, 45, 9000);
             ctx.font = "bold 2.6em Kanit";
-            function printAt(context: any, text: string, x: number, y: any, lineHeight: any, fitWidth: number) {
-                var lines = text.split('\n');
-                fitWidth = fitWidth || 0;
-
-                if (fitWidth <= 0) {
-                    context.fillText(text, x, y);
-                    return;
-                }
-
-                for (var idx = 1; idx <= text.length; idx++) {
-                    var str = text.substr(0, idx);
-                    if (context.measureText(str).width > fitWidth) {
-                        context.fillText(text.substr(0, idx - 1), x, y);
-                        printAt(context, text.substr(idx - 1), x, y + lineHeight, lineHeight, fitWidth);
-                        return;
-                    }
-                }
-                for (var i = 0; i < lines.length; i++)
-                    context.fillText(lines[i], x, y + (i * lineHeight));
-            }
+    
             ctx.drawImage(assets[props.weather], WIDTH - 50 - 40 - 325, 380, 400, 300);
-            var img = new Image;
-            img.src = "http://www.sattmet.tmd.go.th/satmet/thai/ir_enh/ir_enh_thai.jpg";
+    
+            var img = new Image();
+            img.src = "http://www.sattmet.tmd.go.th/satmet/thai/ir_enh/ir_enh_thai.jpg";  // เปลี่ยน URL ของรูปภาพที่โฮสต์ด้วย HTTPS
             img.onload = function () {
                 ctx.drawImage(img,
                     480, 200,
@@ -302,8 +301,13 @@ const NewSlip = (props: InformationProp) => {
                     37, 240,
                     656, 902);
             };
+            img.onerror = function () {
+                console.error("Failed to load image");
+                // คุณสามารถใช้รูปภาพสำรองหรือจัดการข้อผิดพลาดได้ตามต้องการ
+            };
         }
     }, [props, assets]);
+    
 
     return (
         <Flex h="100vh" w={['100%', '100%', '70%', '60%', '60%']} alignItems="center" justifyContent={["center", "center", "start", "start"]} direction="column">

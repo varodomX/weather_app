@@ -26,6 +26,12 @@ import th from "dayjs/locale/th";
 import html2canvas from "html2canvas";
 import axios from 'axios'
 
+
+// ✅ Extend Plugins เพื่อให้ใช้งาน `dayjs().tz()` ได้
+dayjs.extend(utc);
+dayjs.extend(timezone);
+dayjs.locale(th);
+
 const HEIGHT = 1600;
 const WIDTH = 2200;
 
@@ -66,47 +72,70 @@ const Page1 = () => {
         humidity: "0.0",
         date: Date()
     });
-
+    const windDirectionMap: Record<string, string> = {
+        '000': 'ลมสงบ',
+        '010': 'ตะวันออกเฉียงเหนือ', '020': 'ตะวันออกเฉียงเหนือ', '030': 'ตะวันออกเฉียงเหนือ',
+        '040': 'ตะวันออกเฉียงเหนือ', '050': 'ตะวันออกเฉียงเหนือ', '060': 'ตะวันออกเฉียงเหนือ',
+        '070': 'ตะวันออกเฉียงเหนือ', '080': 'ตะวันออกเฉียงเหนือ', '090': 'ตะวันออก',
+        '100': 'ตะวันออกเฉียงใต้', '110': 'ตะวันออกเฉียงใต้', '120': 'ตะวันออกเฉียงใต้',
+        '130': 'ตะวันออกเฉียงใต้', '140': 'ตะวันออกเฉียงใต้', '150': 'ตะวันออกเฉียงใต้',
+        '160': 'ตะวันออกเฉียงใต้', '170': 'ตะวันออกเฉียงใต้', '180': 'ใต้',
+        '190': 'ตะวันตกเฉียงใต้', '200': 'ตะวันตกเฉียงใต้', '210': 'ตะวันตกเฉียงใต้',
+        '220': 'ตะวันตกเฉียงใต้', '230': 'ตะวันตกเฉียงใต้', '240': 'ตะวันตกเฉียงใต้',
+        '250': 'ตะวันตกเฉียงใต้', '260': 'ตะวันตกเฉียงใต้', '270': 'ตะวันตก',
+        '280': 'ตะวันตกเฉียงเหนือ', '290': 'ตะวันตกเฉียงเหนือ', '300': 'ตะวันตกเฉียงเหนือ',
+        '310': 'ตะวันตกเฉียงเหนือ', '320': 'ตะวันตกเฉียงเหนือ', '330': 'ตะวันตกเฉียงเหนือ',
+        '340': 'ตะวันตกเฉียงเหนือ', '350': 'ตะวันตกเฉียงเหนือ'
+    };
+    
+    
+    // ✅ เพิ่มฟังก์ชันแปลงค่าทิศลม
+    const getWindDirection = (wind: string) => {
+        return windDirectionMap[wind] || 'ไม่ทราบทิศทาง';
+    };
     useEffect(() => {
         const fetchWeatherData = async () => {
             try {
                 const [weatherResponse, tempResponse] = await Promise.all([
                     axios.get('https://leaf-weather.onrender.com/api/weather'),
-                    axios.get('https://leaf-weather.onrender.com/api/temp')
+                    axios.get('https://radarkhonkaen.com/canvas/temp/api.php')
                 ]);
-
+    
                 const stations = weatherResponse.data.Stations.Station;
                 const targetStation = stations.find((station: any) => station.WmoStationNumber === "48381");
-
+    
+                // ตรวจสอบว่ามีข้อมูลจาก API หรือไม่
+                const tempData = tempResponse.data || {}; // ป้องกัน error ถ้า API ไม่ส่งค่ากลับมา
+    
                 if (targetStation) {
                     const observation = targetStation.Observation;
-                    const tempData = tempResponse.data[0];
-                    
+    
                     setInitialValues({
                         description: `สถานี: ${targetStation.StationNameThai}\nจังหวัด: ${targetStation.Province}`,
                         description_position: 1485,
                         description_fontsize: "2",
                         description_lineheight: "42",
-                        wind_direction: observation.WindDirection || '',
-                        wind_speed: `${observation.WindSpeed} km/h` || '',
+                        wind_direction: getWindDirection(observation.WindDirection || '000'),
+                        wind_speed: `${parseFloat(observation.WindSpeed || '0').toFixed(1)} km/h`,
                         bg: "bg1",
-                        rain: observation.Rainfall || '0.0',
-                        temp: observation.AirTemperature || '0.0',
-                        press: observation.MeanSeaLevelPressure || '0.0',
-                        max: tempData.max || 'N/A',
-                        min: tempData.min || 'N/A',
-                        visibility: observation.LandVisibility || '0',
-                        humidity: observation.RelativeHumidity || '0.0',
-                        date: Date()
+                        rain: parseFloat(observation.Rainfall || '0').toFixed(1),
+                        temp: parseFloat(observation.AirTemperature || '0').toFixed(1),
+                        press: parseFloat(observation.MeanSeaLevelPressure || '0').toFixed(1),
+                        max: tempData?.max && !isNaN(Number(tempData.max)) ? Number(tempData.max).toFixed(1) : 'N/A',
+                        min: tempData?.min && !isNaN(Number(tempData.min)) ? Number(tempData.min).toFixed(1) : 'N/A',
+                        visibility: parseFloat(observation.LandVisibility || '0').toFixed(1),
+                        humidity: parseFloat(observation.RelativeHumidity || '0').toFixed(1),
+                        date: dayjs().tz('Asia/Bangkok').format('YYYY-MM-DDTHH:mm') // ใช้ dayjs แปลงค่าเวลา
                     });
                 }
             } catch (error) {
                 console.error('Error fetching weather data:', error);
             }
         };
-
+    
         fetchWeatherData();
     }, []);
+    
     return (
         <>
             <Formik<InformationProp>
@@ -247,13 +276,14 @@ const Page1 = () => {
                                         </Select>
 
                                         <Button
-                                            isLoading={isSubmitting}
-                                            type="submit"
-                                            bg="#ffffff1a"
-                                            _hover={{ bg: "#fff3", border: "0", borderColor: "#fff3" }}
-                                            fontWeight="400"
-                                            color="#fff"
-                                        >
+                                             isLoading={isSubmitting}
+                                             type="button" // ✅ ป้องกันการรีโหลดหน้าเว็บ
+                                             onClick={handleSaveImage} // ✅ ใช้ฟังก์ชันแยก
+                                             bg="#ffffff1a"
+                                             _hover={{ bg: "#fff3", border: "0", borderColor: "#fff3" }}
+                                             fontWeight="400"
+                                             color="#fff"
+                                         >
                                             Save Image
                                         </Button>
                                         <Box fontSize="12px">วิธีโหลดรูป! คลิกขวา Save Image as</Box>
@@ -293,7 +323,7 @@ const NewSlip = (props: InformationProp) => {
             fetch(url)
                 .then((r) => r.blob())
                 .then((b) => createImageBitmap(b));
-
+                
         const gettingImage = async () => {
             const [bg1 , bg2, bg3, bg4, bg5, bg6, bg7 , bg8] = await Promise.all([
                 fetchToBitmap(`${import.meta.env.VITE_API_ASSETS}0700.jpg`),
@@ -320,8 +350,47 @@ const NewSlip = (props: InformationProp) => {
 
         gettingImage();
     }, []);
-
+    
     useEffect(() => {
+        const handleSaveImage = async () => {
+            const element = document.getElementById("slip"); // ✅ เลือก Canvas ที่ต้องการบันทึก
+            if (!element) {
+                console.error("❌ ไม่พบองค์ประกอบ #slip");
+                return;
+            }
+        
+            try {
+                const canvas = await html2canvas(element, {
+                    scale: window.devicePixelRatio, // ✅ ป้องกันภาพแตกบน Mobile
+                    useCORS: true, // ✅ รองรับรูปภาพที่โหลดจาก API อื่น
+                    logging: false
+                });
+        
+                // ✅ ใช้ Blob URL สำหรับ Mobile
+                canvas.toBlob((blob) => {
+                    if (!blob) {
+                        console.error("❌ ไม่สามารถสร้าง Blob ได้");
+                        return;
+                    }
+        
+                    const blobURL = URL.createObjectURL(blob);
+                    const link = document.createElement("a");
+                    link.href = blobURL;
+                    link.download = "weather.png";
+                    document.body.appendChild(link);
+        
+                    // ✅ ใช้ click() เพื่อให้ทำงานบนมือถือ
+                    link.click();
+        
+                    // ✅ ลบ URL ที่ไม่ใช้แล้ว
+                    URL.revokeObjectURL(blobURL);
+                    document.body.removeChild(link);
+                }, "image/png");
+        
+            } catch (error) {
+                console.error("❌ Error ในการบันทึกรูป:", error);
+            }
+        };
         const canvas = ref.current;
         const ctx = canvas?.getContext("2d");
         
