@@ -15,6 +15,7 @@ import {
     FormControl,
     FormLabel,
     FormHelperText,
+    useToast,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { Formik, Field, Form } from "formik";
@@ -23,6 +24,7 @@ import timezone from 'dayjs/plugin/timezone';
 import dayjs from "dayjs";
 import th from "dayjs/locale/th";
 import html2canvas from "html2canvas";
+import { loadPageState, savePageState } from "@/lib/firebaseStore";
 
 const HEIGHT = 1814;
 const WIDTH = 1134;
@@ -54,6 +56,18 @@ const getTimeSlotFromDate = (dateValue: string) => {
     return "07:00 น.";
 };
 
+const DEFAULT_VALUES: InformationProp = {
+    description: `มีฝนฟ้าคะนอง ร้อยละ30 ของพื้นที่\nส่วนมากบริเวณจังหวัดหนองคาย บึงกาฬ อุดรธานี สกลนคร นครพนม\nขอนแก่น ชัยภูมิ นครราชสีมา บุรีร์มย์ สรินทร์ ศรีสะเกษ และอุบลราชธานี\nอุณหภูมิต่ำสุด 24 - 26 องศาเซลเซียส\nอุณหภูมิต่ำสุด 34 - 36 องศาเซลเซียส `,
+    description_position: 1485,
+    description_fontsize: "2",
+    description_lineheight: "42",
+    wind_direction: "ลมตะวันออกเฉียงใต้",
+    wind_speed: "ความเร็วลม\n10 - 20 กม./ชม",
+    weather: "w1",
+    time: getTimeSlotFromDate(INITIAL_DATE),
+    date: INITIAL_DATE
+};
+
 const printAt = (context: CanvasRenderingContext2D, text: string, x: number, y: number, lineHeight: number, fitWidth: number) => {
     var lines = text.split('\n');
     fitWidth = fitWidth || 0;
@@ -76,20 +90,30 @@ const printAt = (context: CanvasRenderingContext2D, text: string, x: number, y: 
 };
 
 const Page1 = () => {
+    const [initialValues, setInitialValues] = useState<InformationProp>(DEFAULT_VALUES);
+    const toast = useToast();
+
+    useEffect(() => {
+        const syncSavedValues = async () => {
+            try {
+                const savedValues = await loadPageState<InformationProp>("page1");
+
+                if (savedValues) {
+                    setInitialValues({ ...DEFAULT_VALUES, ...savedValues });
+                }
+            } catch (error) {
+                console.error("Failed to load page1 state", error);
+            }
+        };
+
+        syncSavedValues();
+    }, []);
+
     return (
         <>
             <Formik<InformationProp>
-                initialValues={{
-                    description: `มีฝนฟ้าคะนอง ร้อยละ30 ของพื้นที่\nส่วนมากบริเวณจังหวัดหนองคาย บึงกาฬ อุดรธานี สกลนคร นครพนม\nขอนแก่น ชัยภูมิ นครราชสีมา บุรีร์มย์ สรินทร์ ศรีสะเกษ และอุบลราชธานี\nอุณหภูมิต่ำสุด 24 - 26 องศาเซลเซียส\nอุณหภูมิต่ำสุด 34 - 36 องศาเซลเซียส `,
-                    description_position: 1485,
-                    description_fontsize: "2",
-                    description_lineheight: "42",
-                    wind_direction: "ลมตะวันออกเฉียงใต้",
-                    wind_speed: "ความเร็วลม\n10 - 20 กม./ชม",
-                    weather: "w1",
-                    time: getTimeSlotFromDate(INITIAL_DATE),
-                    date: INITIAL_DATE
-                }}
+                enableReinitialize
+                initialValues={initialValues}
                 onSubmit={(values, { setSubmitting }) => {
                     const slip = document.querySelector<HTMLCanvasElement>("#slip");
 
@@ -225,6 +249,33 @@ const Page1 = () => {
                                             </option>
                                         </Select>
                                         <Field as={Textarea} name="wind_speed" border="1px" borderColor="#ffffff1a" />
+                                        <Button
+                                            type="button"
+                                            bg="#1d4ed8"
+                                            _hover={{ bg: "#1e40af" }}
+                                            fontWeight="600"
+                                            color="#fff"
+                                            onClick={async () => {
+                                                try {
+                                                    await savePageState("page1", values);
+                                                    toast({
+                                                        title: "บันทึกข้อมูลหน้า 1 แล้ว",
+                                                        status: "success",
+                                                        duration: 2000,
+                                                        isClosable: true,
+                                                    });
+                                                } catch (error) {
+                                                    toast({
+                                                        title: "บันทึกข้อมูลหน้า 1 ไม่สำเร็จ",
+                                                        status: "error",
+                                                        duration: 2000,
+                                                        isClosable: true,
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            บันทึกข้อมูล
+                                        </Button>
 
                                         {/* <Button
                                             isLoading={isSubmitting}

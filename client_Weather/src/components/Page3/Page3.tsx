@@ -16,6 +16,7 @@ import {
     FormControl,
     FormLabel,
     FormHelperText,
+    useToast,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { Formik, Field, Form } from "formik";
@@ -24,6 +25,7 @@ import timezone from 'dayjs/plugin/timezone';
 import dayjs from "dayjs";
 import th from "dayjs/locale/th";
 import axios from 'axios'
+import { loadPageState, savePageState } from "@/lib/firebaseStore";
 
 
 // ✅ Extend Plugins เพื่อให้ใช้งาน `dayjs().tz()` ได้
@@ -53,24 +55,29 @@ interface InformationProp {
     bg: "bg1" | "bg2" | "bg3" | "bg4" | "bg5" | "bg6" | "bg7" | "bg8";
 }
 
+const DEFAULT_PAGE3_VALUES: InformationProp = {
+    description: '',
+    description_position: 1485,
+    description_fontsize: "2",
+    description_lineheight: "42",
+    wind_direction: "",
+    wind_speed: "",
+    bg: "bg1",
+    rain: "0.0",
+    temp: "0.0",
+    press: "0.0",
+    max: "0.0",
+    min: "0.0",
+    visibility: "0",
+    humidity: "0.0",
+    date: dayjs().tz('Asia/Bangkok').format('YYYY-MM-DDTHH:mm')
+};
+
 const Page1 = () => {
-    const [initialValues, setInitialValues] = useState<InformationProp>({
-        description: '',
-        description_position: 1485,
-        description_fontsize: "2",
-        description_lineheight: "42",
-        wind_direction: "",
-        wind_speed: "",
-        bg: "bg1",
-        rain: "0.0",
-        temp: "0.0",
-        press: "0.0",
-        max: "0.0",
-        min: "0.0",
-        visibility: "0",
-        humidity: "0.0",
-        date: Date()
-    });
+    const [initialValues, setInitialValues] = useState<InformationProp>(DEFAULT_PAGE3_VALUES);
+    const [didLoadSavedState, setDidLoadSavedState] = useState(false);
+    const [hasSavedState, setHasSavedState] = useState(false);
+    const toast = useToast();
     const windDirectionMap: Record<string, string> = {
         '000': 'ลมสงบ',
         '010': 'ตะวันออกเฉียงเหนือ', '020': 'ตะวันออกเฉียงเหนือ', '030': 'ตะวันออกเฉียงเหนือ',
@@ -93,6 +100,29 @@ const Page1 = () => {
         return windDirectionMap[wind] || 'ไม่ทราบทิศทาง';
     };
     useEffect(() => {
+        const syncSavedValues = async () => {
+            try {
+                const savedValues = await loadPageState<InformationProp>("page3");
+
+                if (savedValues) {
+                    setHasSavedState(true);
+                    setInitialValues((current) => ({ ...current, ...savedValues }));
+                }
+            } catch (error) {
+                console.error('Error loading page3 state:', error);
+            } finally {
+                setDidLoadSavedState(true);
+            }
+        };
+
+        syncSavedValues();
+    }, []);
+
+    useEffect(() => {
+        if (!didLoadSavedState || hasSavedState) {
+            return;
+        }
+
         const fetchWeatherData = async () => {
             try {
                 const [weatherResponse, tempResponse] = await Promise.all([
@@ -110,10 +140,8 @@ const Page1 = () => {
                     const observation = targetStation.Observation;
     
                     setInitialValues({
+                        ...DEFAULT_PAGE3_VALUES,
                         description: `สถานี: ${targetStation.StationNameThai}\nจังหวัด: ${targetStation.Province}`,
-                        description_position: 1485,
-                        description_fontsize: "2",
-                        description_lineheight: "42",
                         wind_direction: getWindDirection(observation.WindDirection || '000'),
                         wind_speed: `${parseFloat(observation.WindSpeed || '0').toFixed(1)} km/h`,
                         bg: "bg1",
@@ -133,7 +161,7 @@ const Page1 = () => {
         };
     
         fetchWeatherData();
-    }, []);
+    }, [didLoadSavedState, hasSavedState]);
     
     return (
         <>
@@ -276,13 +304,31 @@ const Page1 = () => {
 
                                         <Button
                                              isLoading={isSubmitting}
-                                             type="submit"
+                                             type="button"
                                              bg="#ffffff1a"
                                              _hover={{ bg: "#fff3", border: "0", borderColor: "#fff3" }}
                                              fontWeight="400"
                                              color="#fff"
+                                             onClick={async () => {
+                                                try {
+                                                    await savePageState("page3", values);
+                                                    toast({
+                                                        title: "บันทึกข้อมูลหน้า 3 แล้ว",
+                                                        status: "success",
+                                                        duration: 2000,
+                                                        isClosable: true,
+                                                    });
+                                                } catch (error) {
+                                                    toast({
+                                                        title: "บันทึกข้อมูลหน้า 3 ไม่สำเร็จ",
+                                                        status: "error",
+                                                        duration: 2000,
+                                                        isClosable: true,
+                                                    });
+                                                }
+                                             }}
                                          >
-                                            Save Image
+                                            บันทึกข้อมูล
                                         </Button>
                                         <Box fontSize="12px">วิธีโหลดรูป! คลิกขวา Save Image as</Box>
                                     </VStack>

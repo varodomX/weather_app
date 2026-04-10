@@ -13,6 +13,7 @@ import {
   RadioGroup,
   Radio,
   HStack,
+  useToast,
 } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import { Formik, Field, Form } from "formik";
@@ -21,6 +22,7 @@ import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
 import th from "dayjs/locale/th";
 import html2canvas from "html2canvas";
+import { loadPageState, savePageState } from "@/lib/firebaseStore";
 
 const HEIGHT = 1814;
 const WIDTH = 1134;
@@ -87,6 +89,11 @@ interface InformationProp {
   radar_image: string;
 }
 
+interface Page2StoredState {
+  values: InformationProp;
+  arrows: ArrowItem[];
+}
+
 const RAIN_TYPE_LABELS = {
   thunderstorm: "ตรวจพบกลุ่มฝนฟ้าคะนอง",
   rainfall: "ตรวจพบกลุ่มฝนธรรมดา",
@@ -126,10 +133,59 @@ const createArrow = (index: number): ArrowItem => ({
   rotation: 45,
 });
 
+const DEFAULT_PAGE2_VALUES: InformationProp = {
+  description1: getRainDescription(
+    "thunderstorm",
+    "light_medium",
+    "increase",
+  ),
+  description2: ``,
+  description_position: 1100,
+  description_fontsize: "2",
+  description_lineheight: "42",
+  weather: "w1",
+  date: Date(),
+  hour: dayjs().format("HH"),
+  minute: "45",
+  rain_status: "rain",
+  rain_type: "thunderstorm",
+  rain_intensity: "light_medium",
+  rain_area_trend: "increase",
+  radar_image: "",
+};
+
 const Page2 = () => {
   const [uploadedRadarImage, setUploadedRadarImage] = useState("");
   const [arrows, setArrows] = useState<ArrowItem[]>([]);
   const [selectedArrowId, setSelectedArrowId] = useState<string | null>(null);
+  const [initialValues, setInitialValues] =
+    useState<InformationProp>(DEFAULT_PAGE2_VALUES);
+  const toast = useToast();
+
+  useEffect(() => {
+    const syncSavedValues = async () => {
+      try {
+        const savedState = await loadPageState<Page2StoredState>("page2");
+
+        if (savedState) {
+          setInitialValues({
+            ...DEFAULT_PAGE2_VALUES,
+            ...savedState.values,
+            radar_image:
+              savedState.values.radar_image?.startsWith("blob:")
+                ? ""
+                : savedState.values.radar_image,
+          });
+          setArrows(savedState.arrows || []);
+          setSelectedArrowId(savedState.arrows?.[0]?.id ?? null);
+        }
+      } catch (error) {
+        console.error("Failed to load page2 state", error);
+      }
+    };
+
+    syncSavedValues();
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -142,26 +198,8 @@ const Page2 = () => {
   return (
     <>
       <Formik<InformationProp>
-        initialValues={{
-          description1: getRainDescription(
-            "thunderstorm",
-            "light_medium",
-            "increase",
-          ),
-          description2: ``,
-          description_position: 1100,
-          description_fontsize: "2",
-          description_lineheight: "42",
-          weather: "w1",
-          date: Date(),
-          hour: dayjs().format("HH"),
-          minute: "45",
-          rain_status: "rain",
-          rain_type: "thunderstorm",
-          rain_intensity: "light_medium",
-          rain_area_trend: "increase",
-          radar_image: "",
-        }}
+        enableReinitialize
+        initialValues={initialValues}
         onSubmit={(values, { setSubmitting }) => {
           const slip = document.querySelector<HTMLCanvasElement>("#slip");
 
@@ -400,6 +438,40 @@ const Page2 = () => {
                       <FormLabel fontSize="12px">ขนาดฟ้อน</FormLabel>
                       <Field as={Input} name="description_fontsize" value="2" isReadOnly />
                     </FormControl>
+                    <Button
+                      type="button"
+                      bg="#1d4ed8"
+                      color="#fff"
+                      _hover={{ bg: "#1e40af" }}
+                      onClick={async () => {
+                        try {
+                          await savePageState<Page2StoredState>("page2", {
+                            values: {
+                              ...values,
+                              radar_image: values.radar_image.startsWith("blob:")
+                                ? ""
+                                : values.radar_image,
+                            },
+                            arrows,
+                          });
+                          toast({
+                            title: "บันทึกข้อมูลหน้า 2 แล้ว",
+                            status: "success",
+                            duration: 2000,
+                            isClosable: true,
+                          });
+                        } catch (error) {
+                          toast({
+                            title: "บันทึกข้อมูลหน้า 2 ไม่สำเร็จ",
+                            status: "error",
+                            duration: 2000,
+                            isClosable: true,
+                          });
+                        }
+                      }}
+                    >
+                      บันทึกข้อมูล
+                    </Button>
 
                     <Box fontSize="12px">
                       วิธีโหลดรูป! คลิกขวา Save Image as

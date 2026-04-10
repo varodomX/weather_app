@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-import { Switch, Route, useLocation, Router, useRouter, Link } from "wouter";
-import { useQuery } from "react-query";
+import { Switch, Route, useLocation, Router, Link } from "wouter";
 import AuthLayout from "./layouts/AuthLayout";
 import AppLayout from "./layouts/Layout";
 import Signin from "./views/Signin";
@@ -15,51 +14,33 @@ function useAuth() {
   const [location, setLocation] = useLocation();
   const [validate, setValidate] = useState(false);
   const TOKEN = window.localStorage.getItem("token");
-
-  const me = async () => {
-    const opt = {
-      method: "GET",
-      headers: {
-        Authorization: "Bearer " + window.localStorage.getItem("token"),
-      },
-    };
-    const me = await fetch(import.meta.env.VITE_API_URL + "me", opt).then(
-      (res) => res.json()
-    );
-    return me;
-  };
-
-  const { data, isLoading } = useQuery(["me", TOKEN], me, {
-    onSuccess(data) {
-      if (data.status != "success") {
-        setLocation("/account/sign-in")
-        localStorage.removeItem("token")
-        localStorage.removeItem("auth-name")
-      } else {
-        setValidate(true);
-      }
-    }
-  });
+  const isAuthRoute = location === "/account/sign-in";
+  const protectedRoutes = [
+    "/",
+    "/app",
+    "/app/page1",
+    "/app/page2",
+    "/app/page3",
+  ];
 
   useEffect(() => {
     if (!TOKEN) {
-      if (
-        location !== "/account/sign-in" &&
-        location == "/" ||
-        location == "/app" ||
-        location == "/app/page1" ||
-        location == "/app/page2" ||
-        location == "/app/page3" ||
-        location == "https://radarkhonkaen.com/line/" 
-      ) {
-        return setLocation("/account/sign-in");
+      if (protectedRoutes.includes(location)) {
+        setLocation("/account/sign-in");
+        return;
       }
 
       setValidate(true);
-    } else {
-      if (location === "/account/sign-in") setLocation("/");
+      return;
     }
-  });
+
+    if (isAuthRoute) {
+      setLocation("/");
+      return;
+    }
+
+    setValidate(true);
+  }, [TOKEN, location, setLocation]);
 
   return validate;
 }
@@ -73,9 +54,8 @@ function AuthVerify({ children }: any) {
 
 function RouterMain() {
   return (
-    <>
-      {/* <AuthVerify> */}
-      <Router>
+    <Router>
+      <AuthVerify>
         <Switch>
           <Route path="/account/sign-in">
             <AuthLayout>
@@ -109,10 +89,10 @@ function RouterMain() {
           </Link>
           <Route>
             <NotFoundPage />
-          </Route></Switch>
-      </Router>
-      {/* </AuthVerify> */}
-    </>
+          </Route>
+        </Switch>
+      </AuthVerify>
+    </Router>
   );
 }
 
