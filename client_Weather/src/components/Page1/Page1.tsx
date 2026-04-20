@@ -400,7 +400,7 @@ const NewSlip = (props: InformationProp) => {
             ctx.drawImage(assets[props.weather], WIDTH - 50 - 40 - 325, 380, 400, 300);
     
             var img = new Image();
-            img.src = "http://www.sattmet.tmd.go.th/satmet/thai/ir_enh/ir_enh_thai.jpg";  // เปลี่ยน URL ของรูปภาพที่โฮสต์ด้วย HTTPS
+            img.src = "/.netlify/functions/satellite-image";
             img.onload = function () {
                 ctx.drawImage(img,
                     480, 200,
