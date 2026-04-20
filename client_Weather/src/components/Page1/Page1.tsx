@@ -400,7 +400,7 @@ const NewSlip = (props: InformationProp) => {
             ctx.drawImage(assets[props.weather], WIDTH - 50 - 40 - 325, 380, 400, 300);
     
             var img = new Image();
-            img.src = "/.netlify/functions/satellite-image";
+            img.src = `/.netlify/functions/satellite-image?t=${Date.now()}`;
             img.onload = function () {
                 ctx.drawImage(img,
                     480, 200,
