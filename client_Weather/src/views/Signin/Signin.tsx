@@ -10,7 +10,6 @@ import {
   VStack,
 } from "@chakra-ui/react";
 import { Field, Form, Formik } from "formik";
-import { useMutation } from "react-query";
 import { useLocation } from "wouter";
 import { useTranslation } from "react-i18next";
 import Footer from "../app/Footer";
@@ -25,47 +24,33 @@ function LoginForm() {
   const [, setLocation] = useLocation();
   const toast = useToast();
 
-  const { mutate } = useMutation(
-    async (info: InformationProp) => {
-      const opt = {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          username: info.username,
-          password: info.password,
-        }),
-      };
+  const signIn = (values: InformationProp) => {
+    const username = values.username.trim();
+    const password = values.password.trim();
 
-      return fetch(import.meta.env.VITE_API_URL + "signIn", opt).then((res) =>
-        res.json(),
-      );
-    },
-    {
-      onSuccess: (data, variables) => {
-        if (data.status === "success") {
-          toast({
-            title: "เข้าสู่ระบบสำเร็จ",
-            status: "success",
-            duration: 3000,
-            isClosable: true,
-          });
-          localStorage.setItem("token", data.data.jwt);
-          localStorage.setItem("auth-name", variables.username);
-          setLocation("/");
-          return;
-        }
+    if (username === "admin" && password === "1234") {
+      toast({
+        title: "เข้าสู่ระบบสำเร็จ",
+        status: "success",
+        duration: 3000,
+        isClosable: true,
+      });
+      localStorage.setItem("token", "local-admin-token");
+      localStorage.setItem("auth-name", username);
+      setLocation("/");
+      return;
+    }
 
-        toast({
-          title: data.data?.[0]?.msg || data.data || "เข้าสู่ระบบไม่สำเร็จ",
-          status: "error",
-          duration: 3000,
-          isClosable: true,
-        });
-      },
-    },
-  );
+    localStorage.removeItem("token");
+    localStorage.removeItem("auth-name");
+    toast({
+      title: "ชื่อผู้ใช้หรือรหัสผ่านไม่ถูกต้อง",
+      description: "ใช้ username: admin และ password: 1234",
+      status: "error",
+      duration: 3000,
+      isClosable: true,
+    });
+  };
 
   return (
     <Formik<InformationProp>
@@ -83,7 +68,7 @@ function LoginForm() {
         }
       }}
       onSubmit={(values, { setSubmitting }) => {
-        mutate(values);
+        signIn(values);
         setSubmitting(false);
       }}
     >

@@ -47,6 +47,10 @@ const HIGHLIGHT_PROVINCES = new Set([
   "จ.บุรีรัมย์",
   "จ.สุรินทร์",
   "จ.มหาสารคาม",
+  "จ.ยโสธร",
+  "จ.ศรีสะเกษ",
+  "จ.อุบลราชธานี",
+  "จ.อุตรดิตถ์",
 ]);
 
 interface WrappedLineToken {
@@ -95,8 +99,8 @@ interface Page2StoredState {
 }
 
 const RAIN_TYPE_LABELS = {
-  thunderstorm: "ตรวจพบกลุ่มฝนฟ้าคะนอง",
-  rainfall: "ตรวจพบกลุ่มฝนธรรมดา",
+  thunderstorm: "ตรวจพบกลุ่มฝนฟ้าคะนอง⛈️",
+  rainfall: "ตรวจพบกลุ่มฝนธรรมดา🌧️",
 } as const;
 
 const RAIN_INTENSITY_LABELS = {
@@ -288,10 +292,10 @@ const Page2 = () => {
                         >
                           <HStack spacing={4}>
                             <Radio value="thunderstorm">
-                              ตรวจพบกลุ่มฝนฟ้าคะนอง
+                              ตรวจพบกลุ่มฝนฟ้าคะนอง⛈️
                             </Radio>
                             <Radio value="rainfall">
-                              ตรวจพบกลุ่มฝนธรรมดา
+                              ตรวจพบกลุ่มฝนธรรมดา🌧️
                             </Radio>
                           </HStack>
                         </RadioGroup>
@@ -364,7 +368,7 @@ const Page2 = () => {
                       </FormControl>
                     )}
                     <Field as={Textarea} name="description1" />
-                    <Field as={Textarea} name="description2" />
+                    <Field as={Textarea} name="description2" height="200px"/>
                     <HStack spacing={2}>
                       <Button
                         type="button"

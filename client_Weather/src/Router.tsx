@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { Switch, Route, useLocation, Router, Link } from "wouter";
 import AuthLayout from "./layouts/AuthLayout";
 import AppLayout from "./layouts/Layout";
@@ -10,39 +10,28 @@ import Page2 from "./components/Page2";
 import Page3 from "./components/Page3";
 import Line from "./components/Line";
 
+const AUTH_TOKEN_KEY = "token";
+const SIGN_IN_PATH = "/account/sign-in";
+const PROTECTED_ROUTES = ["/", "/app", "/app/page1", "/app/page2", "/app/page3"];
+
 function useAuth() {
   const [location, setLocation] = useLocation();
-  const [validate, setValidate] = useState(false);
-  const TOKEN = window.localStorage.getItem("token");
-  const isAuthRoute = location === "/account/sign-in";
-  const protectedRoutes = [
-    "/",
-    "/app",
-    "/app/page1",
-    "/app/page2",
-    "/app/page3",
-  ];
+  const token = window.localStorage.getItem(AUTH_TOKEN_KEY);
+  const isAuthRoute = location === SIGN_IN_PATH;
+  const isProtectedRoute = PROTECTED_ROUTES.includes(location);
 
   useEffect(() => {
-    if (!TOKEN) {
-      if (protectedRoutes.includes(location)) {
-        setLocation("/account/sign-in");
-        return;
-      }
-
-      setValidate(true);
+    if (!token && isProtectedRoute) {
+      setLocation(SIGN_IN_PATH, { replace: true });
       return;
     }
 
-    if (isAuthRoute) {
-      setLocation("/");
-      return;
+    if (token && isAuthRoute) {
+      setLocation("/", { replace: true });
     }
+  }, [isAuthRoute, isProtectedRoute, setLocation, token]);
 
-    setValidate(true);
-  }, [TOKEN, location, setLocation]);
-
-  return validate;
+  return !((!token && isProtectedRoute) || (token && isAuthRoute));
 }
 
 function AuthVerify({ children }: any) {
