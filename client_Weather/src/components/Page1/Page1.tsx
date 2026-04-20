@@ -91,6 +91,8 @@ const printAt = (context: CanvasRenderingContext2D, text: string, x: number, y: 
 
 const Page1 = () => {
     const [initialValues, setInitialValues] = useState<InformationProp>(DEFAULT_VALUES);
+    const [uploadedSatelliteImage, setUploadedSatelliteImage] = useState("");
+    const [isLoadingSatelliteImage, setIsLoadingSatelliteImage] = useState(false);
     const toast = useToast();
 
     useEffect(() => {
@@ -108,6 +110,51 @@ const Page1 = () => {
 
         syncSavedValues();
     }, []);
+
+    useEffect(() => {
+        return () => {
+            if (uploadedSatelliteImage) {
+                URL.revokeObjectURL(uploadedSatelliteImage);
+            }
+        };
+    }, [uploadedSatelliteImage]);
+
+    const loadSatelliteImage = async () => {
+        setIsLoadingSatelliteImage(true);
+
+        try {
+            const response = await fetch(`/.netlify/functions/satellite-image?t=${Date.now()}`);
+
+            if (!response.ok) {
+                throw new Error(`โหลดรูปไม่สำเร็จ (${response.status})`);
+            }
+
+            const blob = await response.blob();
+            const objectUrl = URL.createObjectURL(blob);
+
+            if (uploadedSatelliteImage) {
+                URL.revokeObjectURL(uploadedSatelliteImage);
+            }
+
+            setUploadedSatelliteImage(objectUrl);
+            toast({
+                title: "โหลดรูปดาวเทียมแล้ว",
+                status: "success",
+                duration: 2000,
+                isClosable: true,
+            });
+        } catch (error) {
+            toast({
+                title: "โหลดรูปดาวเทียมไม่สำเร็จ",
+                description: error instanceof Error ? error.message : "โปรดลองใหม่อีกครั้ง",
+                status: "error",
+                duration: 3000,
+                isClosable: true,
+            });
+        } finally {
+            setIsLoadingSatelliteImage(false);
+        }
+    };
 
     return (
         <>
@@ -136,7 +183,7 @@ const Page1 = () => {
                     <Box w="100%" h="100%" zIndex="-1">
                         <Flex direction={['column', 'row', 'row', 'row', 'row']} justifyContent="center">
                             <Flex justifyContent="center">
-                                <NewSlip {...values} />
+                                <NewSlip {...values} satelliteImage={uploadedSatelliteImage} />
                             </Flex>
                             <Flex p="3" w={['100%', '100%', '50%', '50%', '50%']} justifyContent="center">
                                 <Form style={{ width: "100%" }}>
@@ -249,6 +296,25 @@ const Page1 = () => {
                                             </option>
                                         </Select>
                                         <Field as={Textarea} name="wind_speed" border="1px" borderColor="#ffffff1a" />
+                                        <FormControl>
+                                            <FormLabel fontSize="12px" mb="1">
+                                                รูปดาวเทียม
+                                            </FormLabel>
+                                            <Button
+                                                type="button"
+                                                bg="#0f766e"
+                                                _hover={{ bg: "#115e59" }}
+                                                color="#fff"
+                                                fontWeight="600"
+                                                isLoading={isLoadingSatelliteImage}
+                                                onClick={loadSatelliteImage}
+                                            >
+                                                โหลดรูปดาวเทียม
+                                            </Button>
+                                            <FormHelperText color="#cbd5e1">
+                                                ระบบจะโหลดรูปมาเก็บเป็นไฟล์ชั่วคราวใน browser แล้วนำไปวาดลง canvas
+                                            </FormHelperText>
+                                        </FormControl>
                                         <Button
                                             type="button"
                                             bg="#1d4ed8"
@@ -299,7 +365,7 @@ const Page1 = () => {
     );
 };
 
-const NewSlip = (props: InformationProp) => {
+const NewSlip = (props: InformationProp & { satelliteImage?: string }) => {
     const ref = useRef<HTMLCanvasElement>(null);
     const [assets, setAssets] = useState<{
         bg: ImageBitmap;
@@ -400,7 +466,7 @@ const NewSlip = (props: InformationProp) => {
             ctx.drawImage(assets[props.weather], WIDTH - 50 - 40 - 325, 380, 400, 300);
     
             var img = new Image();
-            img.src = `/.netlify/functions/satellite-image?t=${Date.now()}`;
+            img.src = props.satelliteImage || `/.netlify/functions/satellite-image?t=${Date.now()}`;
             img.onload = function () {
                 ctx.drawImage(img,
                     480, 200,
