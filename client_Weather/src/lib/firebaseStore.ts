@@ -1,14 +1,3 @@
-const firebaseConfig = {
-  apiKey: "AIzaSyA1abm9gVOOLPyyaL0-rQ2jODWBaVQZA5o",
-  authDomain: "une-wfh.firebaseapp.com",
-  databaseURL:
-    "https://une-wfh-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "une-wfh",
-  storageBucket: "une-wfh.firebasestorage.app",
-  messagingSenderId: "972608189061",
-  appId: "1:972608189061:web:f09f64aa659abb27f66fec",
-};
-
 const sanitizeKey = (value: string) =>
   value.replace(/[.#$/\[\]]/g, "_").trim() || "guest";
 
@@ -24,31 +13,29 @@ const getCurrentUserKey = () => {
   );
 };
 
-const getPageUrl = (pageKey: string) =>
-  `${firebaseConfig.databaseURL}/users/${getCurrentUserKey()}/pages/${pageKey}.json`;
+const getPageStorageKey = (pageKey: string) =>
+  `weather-app:${getCurrentUserKey()}:pages:${pageKey}`;
 
 export const loadPageState = async <T>(pageKey: string) => {
-  const response = await fetch(getPageUrl(pageKey));
-
-  if (!response.ok) {
-    throw new Error(`Failed to load ${pageKey} state`);
+  if (typeof window === "undefined") {
+    return null;
   }
 
-  return (await response.json()) as T | null;
+  const savedValue = window.localStorage.getItem(getPageStorageKey(pageKey));
+
+  if (!savedValue) {
+    return null;
+  }
+
+  return JSON.parse(savedValue) as T;
 };
 
 export const savePageState = async <T>(pageKey: string, data: T) => {
-  const response = await fetch(getPageUrl(pageKey), {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to save ${pageKey} state`);
+  if (typeof window === "undefined") {
+    return data;
   }
 
-  return response.json();
+  window.localStorage.setItem(getPageStorageKey(pageKey), JSON.stringify(data));
+
+  return data;
 };

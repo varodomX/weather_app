@@ -121,9 +121,13 @@ const Page1 = () => {
 
     const loadSatelliteImage = async () => {
         setIsLoadingSatelliteImage(true);
+        const controller = new AbortController();
+        const timeoutId = window.setTimeout(() => controller.abort(), 15000);
 
         try {
-            const response = await fetch(`/.netlify/functions/satellite-image?t=${Date.now()}`);
+            const response = await fetch(`/.netlify/functions/satellite-image?t=${Date.now()}`, {
+                signal: controller.signal,
+            });
 
             if (!response.ok) {
                 throw new Error(`โหลดรูปไม่สำเร็จ (${response.status})`);
@@ -146,12 +150,18 @@ const Page1 = () => {
         } catch (error) {
             toast({
                 title: "โหลดรูปดาวเทียมไม่สำเร็จ",
-                description: error instanceof Error ? error.message : "โปรดลองใหม่อีกครั้ง",
+                description:
+                    error instanceof DOMException && error.name === "AbortError"
+                        ? "รอรูปจากต้นทางนานเกินไป โปรดลองใหม่อีกครั้ง"
+                        : error instanceof Error
+                            ? error.message
+                            : "โปรดลองใหม่อีกครั้ง",
                 status: "error",
                 duration: 3000,
                 isClosable: true,
             });
         } finally {
+            window.clearTimeout(timeoutId);
             setIsLoadingSatelliteImage(false);
         }
     };
@@ -465,19 +475,20 @@ const NewSlip = (props: InformationProp & { satelliteImage?: string }) => {
     
             ctx.drawImage(assets[props.weather], WIDTH - 50 - 40 - 325, 380, 400, 300);
     
-            var img = new Image();
-            img.src = props.satelliteImage || `/.netlify/functions/satellite-image?t=${Date.now()}`;
-            img.onload = function () {
-                ctx.drawImage(img,
-                    480, 200,
-                    300, 500,
-                    37, 240,
-                    656, 902);
-            };
-            img.onerror = function () {
-                console.error("Failed to load image");
-                // คุณสามารถใช้รูปภาพสำรองหรือจัดการข้อผิดพลาดได้ตามต้องการ
-            };
+            if (props.satelliteImage) {
+                var img = new Image();
+                img.src = props.satelliteImage;
+                img.onload = function () {
+                    ctx.drawImage(img,
+                        480, 200,
+                        300, 500,
+                        37, 240,
+                        656, 902);
+                };
+                img.onerror = function () {
+                    console.error("Failed to load image");
+                };
+            }
         }
     }, [props, assets]);
     
